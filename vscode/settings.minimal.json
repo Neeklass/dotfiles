@@ -45,6 +45,7 @@
     "terminal.integrated.smoothScrolling": true,
     "terminal.integrated.enableMultiLinePasteWarning": "never",
     "git.addAICoAuthor": "off",
+    "chat.disableAIFeatures": true,
     "github.copilot.nextEditSuggestions.enabled": false,
     "chat.commandCenter.enabled": false,
     "chat.mcp.gallery.enabled": false,
