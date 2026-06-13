@@ -51,6 +51,6 @@
     "chat.mcp.gallery.enabled": false,
     "extensions.ignoreRecommendations": true,
     "update.showReleaseNotes": false,
-    "workbench.colorTheme": "Catppuccin Mocha",
-    "workbench.iconTheme": "catppuccin-mocha"
+    "terminal.integrated.suggest.enabled": false,
+    "terminal.integrated.shellIntegration.enabled": false
 }

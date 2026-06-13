@@ -52,6 +52,8 @@
     "telemetry.telemetryLevel": "off",
     "extensions.ignoreRecommendations": true,
     "update.showReleaseNotes": false,
+    "terminal.integrated.suggest.enabled": false,
+    "terminal.integrated.shellIntegration.enabled": false,
     "workbench.colorTheme": "Catppuccin Mocha",
     "workbench.iconTheme": "catppuccin-mocha"
 }
