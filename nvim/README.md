@@ -126,3 +126,46 @@ nvim --headless --clean --cmd "set runtimepath^=.\nvim" -u .\nvim\init.lua +qa
 - The bottom statusline shows mode, filename, filetype, and line/column.
 - Git branch appears in the statusline when available, without adding a Git
   plugin.
+
+## Bottom Terminal
+
+Phase 3 uses Neovim's built-in terminal, not a terminal plugin.
+
+Toggle the bottom terminal:
+
+```text
+Ctrl+J
+```
+
+Fallback from Normal mode:
+
+```vim
+<leader>t
+```
+
+The terminal opens in a bottom horizontal split and uses the shell configured by
+the platform settings. On Windows this usually means `pwsh.exe` or
+`powershell.exe`; on Linux it will use `$SHELL`, such as bash or zsh.
+
+Hiding the terminal hides the window but keeps the terminal buffer and shell
+process alive when possible. Reopening the terminal reuses that buffer.
+
+Leave terminal input mode:
+
+```text
+Esc Esc
+```
+
+Plain `Esc` is intentionally not mapped in terminal mode because it can
+interfere with terminal programs.
+
+## Phase 3 Manual Checks
+
+- `Ctrl+J` opens a bottom terminal.
+- The terminal starts in input mode.
+- PowerShell accepts commands on Windows.
+- `Ctrl+J` hides the terminal without killing the shell process.
+- `Ctrl+J` reopens the same terminal session.
+- `<leader>t` toggles the terminal from Normal mode.
+- `Esc Esc` leaves terminal input mode.
+- Explorer and statusline still work.
