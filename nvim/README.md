@@ -121,6 +121,21 @@ Optional:
 
 - fd
 
+#### External Tools And Source Repositories
+
+These links are for source/project transparency. On Windows, install with
+`winget` unless there is a specific reason not to. On Linux/Fedora, package names
+may differ from Windows `winget` IDs. The Neovim Lua config should not depend on
+hardcoded machine-specific paths.
+
+| Tool | Windows winget package | Source repository | Notes |
+|---|---|---|---|
+| Git for Windows | `Git.Git` | https://github.com/git-for-windows/git | Windows Git package used by winget. Upstream Git is https://github.com/git/git |
+| Neovim | `Neovim.Neovim` | https://github.com/neovim/neovim | Editor core |
+| Neovide | `Neovide.Neovide` | https://github.com/neovide/neovide | GUI client for Neovim |
+| ripgrep | `BurntSushi.ripgrep.MSVC` | https://github.com/BurntSushi/ripgrep | Required for Telescope live grep |
+| fd | `sharkdp.fd` | https://github.com/sharkdp/fd | Optional; improves file finding |
+
 Example using `winget`:
 
 ```powershell
