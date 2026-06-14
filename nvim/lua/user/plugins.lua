@@ -18,6 +18,7 @@ require("lazy").setup({
   { import = "user.plugins.explorer" },
   { import = "user.plugins.statusline" },
   { import = "user.plugins.git" },
+  { import = "user.plugins.picker" },
 }, {
   lockfile = config_root .. "/lazy-lock.json",
   change_detection = {

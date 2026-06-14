@@ -39,6 +39,7 @@ Phase 2 adds a small plugin layer:
 - `lualine.nvim` provides the bottom statusline.
 - `nvim-web-devicons` provides optional file/statusline icons.
 - `gitsigns.nvim` provides lightweight Git change markers in the sign column.
+- `telescope.nvim` provides file, text, buffer, and command pickers.
 
 `nvim-web-devicons` is only for appearance. The config still works without a
 Nerd Font, but icons may appear as boxes or unknown glyphs until Neovide or the
@@ -207,3 +208,42 @@ enabled yet.
 - Confirm `Ctrl+B` still toggles the explorer.
 - Confirm `Ctrl+J` still toggles the terminal.
 - Run `git status` in the bottom terminal.
+
+## Picker And Search
+
+Phase 5 adds a minimal picker workflow with `telescope.nvim`.
+
+GUI-friendly shortcuts:
+
+```text
+Ctrl+P        find files
+Ctrl+Shift+F  project-wide text search
+```
+
+These are Neovide-first shortcuts. Terminal Neovim may not reliably detect
+`Ctrl+Shift+F`, depending on the terminal emulator and keyboard layout.
+
+Reliable fallback mappings:
+
+```vim
+<leader>ff  find files
+<leader>fg  project-wide text search
+<leader>fb  open buffer picker
+<leader>fc  command picker
+```
+
+Project-wide text search uses `ripgrep` (`rg`). Install `rg` before using
+`live_grep`. The `fd` tool is optional; it can improve file finding later but is
+not required by this config.
+
+## Phase 5 Manual Checks
+
+- `Ctrl+P` opens the file picker in Neovide.
+- `<leader>ff` opens the file picker.
+- `Ctrl+Shift+F` opens project-wide text search in Neovide.
+- `<leader>fg` opens project-wide text search.
+- `<leader>fb` opens the buffer picker.
+- `<leader>fc` opens the command picker.
+- `Ctrl+B` still toggles the explorer.
+- `Ctrl+J` still toggles the terminal.
+- Git signs still appear in edited Git files.
