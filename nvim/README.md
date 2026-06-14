@@ -468,6 +468,95 @@ Project-wide text search uses `ripgrep` (`rg`). Install `rg` before using
 `live_grep`. The `fd` tool is optional; it can improve file finding later but is
 not required by this config.
 
+## Nerd Font And Icons
+
+Phase 6 uses the installed JetBrainsMono Nerd Font Mono family for Neovide:
+
+```lua
+vim.opt.guifont = "JetBrainsMono NFM:h12"
+```
+
+This setting is inside the Neovide-only GUI config. It is not a machine-specific
+path. If the font is missing on another machine, Neovide should still start, but
+icons from `nvim-web-devicons` may look broken until a Nerd Font is installed.
+
+Any Nerd Font should work, but JetBrainsMono Nerd Font Mono is the chosen
+default for this config. It is a common, stable coding font and includes the
+Nerd Font glyphs needed by nvim-tree, lualine, and Telescope icons.
+
+Install on Windows:
+
+1. Download JetBrainsMono from Nerd Fonts:
+   https://github.com/ryanoasis/nerd-fonts/tree/master/patched-fonts/JetBrainsMono
+   or from the Nerd Fonts releases page:
+   https://github.com/ryanoasis/nerd-fonts/releases
+2. Use the TTF package.
+3. Install the JetBrainsMono Nerd Font Mono files, for example:
+   - `JetBrainsMonoNerdFontMono-Regular.ttf`
+   - `JetBrainsMonoNerdFontMono-Italic.ttf`
+   - `JetBrainsMonoNerdFontMono-SemiBold.ttf`
+   - `JetBrainsMonoNerdFontMono-SemiBoldItalic.ttf`
+4. Restart Neovide if it was already running.
+
+Do not commit font files or font binaries to this repository.
+
+Verify Windows can see the font:
+
+```powershell
+Get-ItemProperty 'HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Fonts' |
+  Select-Object -Property * |
+  Format-List *JetBrains*
+```
+
+If the installed family name differs, use the exact Windows font family name in
+`vim.opt.guifont`. Nerd Fonts commonly distinguish `Nerd Font`, `Nerd Font Mono`,
+and `Nerd Font Propo` variants.
+
+For the Mono files listed above, Windows registers the family as:
+
+```text
+JetBrainsMono NFM
+```
+
+You can also check the registry directly:
+
+```powershell
+reg query "HKLM\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Fonts" /f JetBrains /s
+reg query "HKCU\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Fonts" /f JetBrains /s
+```
+
+If icons look broken, verify the installed font name and adjust
+`vim.opt.guifont` to match it.
+
+Verify icons in Neovide:
+
+- Start Neovide normally.
+- Open the explorer with `Ctrl+B`.
+- Check that file/folder icons no longer appear as boxes or broken glyphs.
+- Open Telescope with `Ctrl+P`.
+- Check that file icons look correct.
+- Check lualine for normal filetype/icon rendering.
+
+Terminal Neovim uses the terminal emulator's font, not `gui.lua`. Configure the
+terminal profile separately, for example Windows Terminal -> profile font ->
+`JetBrainsMono NFM`.
+
+On Linux, install a Nerd Font through your distro, package manager, or manual
+font install, then configure the terminal emulator or GUI client to use it.
+
+Explorer navigation polish is intentionally not part of Phase 6. nvim-tree
+already has useful defaults:
+
+- `Enter` / `o` opens a node.
+- Double-click opens a node.
+- `-` goes up.
+- `P` moves to the parent directory.
+- `W` collapses all folders.
+- `g?` opens nvim-tree help.
+
+Further explorer navigation polish belongs in Phase 11 or a later small polish
+phase.
+
 ## Phase 5 Manual Checks
 
 - `Ctrl+P` opens the file picker in Neovide.
