@@ -1,11 +1,10 @@
 # Neovim Config
 
-This is a clean Phase 1 Neovim Lua configuration.
+This is a clean Neovim Lua configuration.
 
 ## Current Scope
 
 - Vanilla Neovim only
-- Plugin-free
 - Windows-first
 - Neovide-aware
 - Terminal-compatible fallback
@@ -17,12 +16,10 @@ This is a clean Phase 1 Neovim Lua configuration.
 - Tabs converted to spaces
 - Word wrap enabled
 - Mode display kept visible
+- Minimal plugin layer for file explorer and statusline
 
 ## Intentionally Not Included Yet
 
-- Plugin manager
-- File explorer
-- Statusline plugin
 - Git signs
 - Picker/search UI
 - Treesitter
@@ -30,6 +27,24 @@ This is a clean Phase 1 Neovim Lua configuration.
 - Autocomplete
 - Debugging
 - Custom Neovim UI
+- Theme plugin
+- Terminal management plugin
+
+## Plugins
+
+Phase 2 adds a small plugin layer:
+
+- `lazy.nvim` manages plugins.
+- `nvim-tree.lua` provides the left-side file explorer.
+- `lualine.nvim` provides the bottom statusline.
+- `nvim-web-devicons` provides optional file/statusline icons.
+
+`nvim-web-devicons` is only for appearance. The config still works without a
+Nerd Font, but icons may appear as boxes or unknown glyphs until Neovide or the
+terminal uses a Nerd Font.
+
+If `lazy-lock.json` is generated, commit it with the dotfiles. It pins plugin
+versions and makes future installs more reproducible.
 
 ## Ctrl+C Tradeoff
 
@@ -68,6 +83,25 @@ C:\Users\<you>\AppData\Local\nvim
 
 Then start Neovide normally.
 
+After startup, lazy.nvim may install missing plugins automatically. Open the
+plugin manager with:
+
+```vim
+:Lazy
+```
+
+Toggle the explorer:
+
+```text
+Ctrl+B
+```
+
+or:
+
+```vim
+<leader>e
+```
+
 ## Test In Terminal Neovim
 
 From this repository:
@@ -81,3 +115,14 @@ For a startup-only check:
 ```powershell
 nvim --headless --clean --cmd "set runtimepath^=.\nvim" -u .\nvim\init.lua +qa
 ```
+
+## Phase 2 Manual Checks
+
+- `:Lazy` opens the plugin manager.
+- `Ctrl+B` toggles the left-side explorer in Normal mode.
+- `<leader>e` also toggles the explorer.
+- Mouse click and mouse wheel work in the explorer.
+- Opening files from the explorer works.
+- The bottom statusline shows mode, filename, filetype, and line/column.
+- Git branch appears in the statusline when available, without adding a Git
+  plugin.

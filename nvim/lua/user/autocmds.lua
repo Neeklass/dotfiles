@@ -32,3 +32,15 @@ vim.api.nvim_create_autocmd("TermOpen", {
     vim.cmd.startinsert()
   end,
 })
+
+vim.api.nvim_create_autocmd("BufEnter", {
+  group = group,
+  desc = "Leave Insert mode when focusing the file explorer",
+  callback = function()
+    if vim.bo.filetype == "NvimTree" then
+      -- Mouse-first usage can move focus from an editable file to nvim-tree
+      -- while Insert mode is still active; nvim-tree is intentionally read-only.
+      vim.cmd.stopinsert()
+    end
+  end,
+})
