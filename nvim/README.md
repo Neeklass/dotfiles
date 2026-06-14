@@ -131,19 +131,27 @@ winget install --id BurntSushi.ripgrep.MSVC
 winget install --id sharkdp.fd
 ```
 
-Clone the dotfiles repository:
+Clone the dotfiles repository anywhere you want. `_repos` is only a personal
+convention, not a requirement.
 
 ```powershell
-New-Item -ItemType Directory -Force "$env:USERPROFILE\_repos" | Out-Null
-git clone https://github.com/Neeklass/dotfiles "$env:USERPROFILE\_repos\dotfiles"
+git clone https://github.com/Neeklass/dotfiles "PATH_TO_YOUR_CLONED_DOTFILES_REPO"
+```
+
+Set setup variables:
+
+```powershell
+$repoRoot = "PATH_TO_YOUR_CLONED_DOTFILES_REPO"
+$live = "$env:LOCALAPPDATA\nvim"
+$repo = Join-Path $repoRoot "nvim"
 ```
 
 Back up an existing Neovim config if one exists:
 
 ```powershell
-if (Test-Path "$env:LOCALAPPDATA\nvim") {
+if (Test-Path $live) {
   $timestamp = Get-Date -Format "yyyyMMdd-HHmmss"
-  Rename-Item -LiteralPath "$env:LOCALAPPDATA\nvim" -NewName "nvim.backup-$timestamp"
+  Rename-Item -LiteralPath $live -NewName "nvim.backup-$timestamp"
 }
 ```
 
@@ -151,8 +159,14 @@ Create the AppData junction:
 
 ```powershell
 New-Item -ItemType Junction `
-  -Path "$env:LOCALAPPDATA\nvim" `
-  -Target "$env:USERPROFILE\_repos\dotfiles\nvim"
+  -Path $live `
+  -Target $repo
+```
+
+Verify the junction:
+
+```powershell
+Get-Item $live | Format-List FullName,LinkType,Target
 ```
 
 Start Neovide normally:
@@ -192,6 +206,45 @@ Rename-Item -LiteralPath "$env:LOCALAPPDATA\nvim.backup-YYYYMMDD-HHMMSS" -NewNam
 ```
 
 Replace `YYYYMMDD-HHMMSS` with the actual backup timestamp.
+
+#### Windows PATH Troubleshooting
+
+After installing tools with `winget`, close and reopen PowerShell before testing
+commands. `winget` may show a package as installed even if the command is not
+available in the current shell's `PATH` yet.
+
+Check versions:
+
+```powershell
+git --version
+nvim --version
+rg --version
+neovide --version
+```
+
+Check command locations:
+
+```powershell
+where.exe git
+where.exe nvim
+where.exe rg
+where.exe neovide
+```
+
+If `neovide --version` fails, try the installed executable directly:
+
+```powershell
+& "C:\Program Files\Neovide\neovide.exe" --version
+```
+
+If that works, Neovide is installed but not available as a `PATH` command.
+Normal Neovide can still be launched with the full executable path:
+
+```powershell
+& "C:\Program Files\Neovide\neovide.exe"
+```
+
+Bash is not required on Windows. PowerShell is enough for this setup.
 
 ### Fedora/Linux Setup
 
