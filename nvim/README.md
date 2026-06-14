@@ -470,19 +470,63 @@ not required by this config.
 
 ## Nerd Font And Icons
 
-Phase 6 uses the installed JetBrainsMono Nerd Font Mono family for Neovide:
+Phase 6 uses the installed JetBrainsMono Nerd Font Mono family for Neovide.
+
+The active Neovide GUI font is configured in `nvim/lua/user/gui.lua` inside:
+
+```lua
+if vim.g.neovide then
+  -- ...
+end
+```
+
+Current setting:
 
 ```lua
 vim.opt.guifont = "JetBrainsMono NFM:h12"
 ```
 
-This setting is inside the Neovide-only GUI config. It is not a machine-specific
-path. If the font is missing on another machine, Neovide should still start, but
-icons from `nvim-web-devicons` may look broken until a Nerd Font is installed.
+This is not a machine-specific path. If the font is missing on another machine,
+Neovide should still start, but icons from `nvim-web-devicons` may look broken
+until a Nerd Font is installed.
 
-Any Nerd Font should work, but JetBrainsMono Nerd Font Mono is the chosen
-default for this config. It is a common, stable coding font and includes the
-Nerd Font glyphs needed by nvim-tree, lualine, and Telescope icons.
+### Why The Name Is `JetBrainsMono NFM`
+
+The installed font files are the Nerd Font Mono variants:
+
+- `JetBrainsMonoNerdFontMono-Regular.ttf`
+- `JetBrainsMonoNerdFontMono-Italic.ttf`
+- `JetBrainsMonoNerdFontMono-SemiBold.ttf`
+- `JetBrainsMonoNerdFontMono-SemiBoldItalic.ttf`
+
+Windows registered these as the font family:
+
+```text
+JetBrainsMono NFM
+```
+
+Therefore Neovide must use:
+
+```text
+JetBrainsMono NFM
+```
+
+not:
+
+- `JetBrainsMono Nerd Font`
+- `JetBrainsMono Nerd Font Mono`
+- `Cascadia Mono NF`
+- `Cascadia Code`
+
+### Why This Font Is Used
+
+- It is a Nerd Font, so it includes icon glyphs used by `nvim-web-devicons`,
+  nvim-tree, lualine, and Telescope.
+- It is the Mono variant, which is appropriate for code.
+- It avoids the Microsoft Cascadia font choice.
+- Font files are installed locally on the machine, not committed to the repo.
+
+Any Nerd Font should work if `vim.opt.guifont` matches the installed font family.
 
 Install on Windows:
 
@@ -500,46 +544,30 @@ Install on Windows:
 
 Do not commit font files or font binaries to this repository.
 
-Verify Windows can see the font:
+### Verify On Windows
 
-```powershell
-Get-ItemProperty 'HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Fonts' |
-  Select-Object -Property * |
-  Format-List *JetBrains*
-```
-
-If the installed family name differs, use the exact Windows font family name in
-`vim.opt.guifont`. Nerd Fonts commonly distinguish `Nerd Font`, `Nerd Font Mono`,
-and `Nerd Font Propo` variants.
-
-For the Mono files listed above, Windows registers the family as:
-
-```text
-JetBrainsMono NFM
-```
-
-You can also check the registry directly:
+Check the installed font registry entries:
 
 ```powershell
 reg query "HKLM\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Fonts" /f JetBrains /s
 reg query "HKCU\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Fonts" /f JetBrains /s
 ```
 
-If icons look broken, verify the installed font name and adjust
-`vim.opt.guifont` to match it.
+On this machine, `HKCU` showed `JetBrainsMono NFM`. If another machine registers
+a different family name, update `vim.opt.guifont` accordingly.
 
-Verify icons in Neovide:
+### Icon Test
 
-- Start Neovide normally.
+- Restart Neovide.
 - Open the explorer with `Ctrl+B`.
-- Check that file/folder icons no longer appear as boxes or broken glyphs.
 - Open Telescope with `Ctrl+P`.
-- Check that file icons look correct.
-- Check lualine for normal filetype/icon rendering.
+- Check that file, folder, and filetype icons are no longer boxed or broken.
 
-Terminal Neovim uses the terminal emulator's font, not `gui.lua`. Configure the
-terminal profile separately, for example Windows Terminal -> profile font ->
-`JetBrainsMono NFM`.
+### Terminal Note
+
+Neovide uses `vim.opt.guifont`. Terminal Neovim does not. Terminal fonts must be
+configured separately in Windows Terminal or the terminal emulator, for example
+Windows Terminal -> profile font -> `JetBrainsMono NFM`.
 
 On Linux, install a Nerd Font through your distro, package manager, or manual
 font install, then configure the terminal emulator or GUI client to use it.
