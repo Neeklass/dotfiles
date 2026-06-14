@@ -38,6 +38,7 @@ Phase 2 adds a small plugin layer:
 - `nvim-tree.lua` provides the left-side file explorer.
 - `lualine.nvim` provides the bottom statusline.
 - `nvim-web-devicons` provides optional file/statusline icons.
+- `gitsigns.nvim` provides lightweight Git change markers in the sign column.
 
 `nvim-web-devicons` is only for appearance. The config still works without a
 Nerd Font, but icons may appear as boxes or unknown glyphs until Neovide or the
@@ -169,3 +170,40 @@ interfere with terminal programs.
 - `<leader>t` toggles the terminal from Normal mode.
 - `Esc Esc` leaves terminal input mode.
 - Explorer and statusline still work.
+
+## Git Display
+
+Phase 4 adds lightweight Git display with `gitsigns.nvim`.
+
+Configured signs:
+
+```text
++  added or untracked line
+~  changed line
+_  deleted line marker
+```
+
+This is visual display only. There are no Git keymaps, hunk staging/reset
+mappings, blame display, lazygit integration, GitHub integration, or full Git UI.
+Run Git commands in the bottom terminal:
+
+```powershell
+git status
+git add .
+git commit
+git push
+```
+
+`nvim-tree` Git integration and lualine diff integration are intentionally not
+enabled yet.
+
+## Phase 4 Manual Checks
+
+- Open a file inside a Git repository.
+- Edit an existing line and confirm `~` appears in the sign column.
+- Add a new line and confirm `+` appears in the sign column.
+- Delete a line and confirm `_` appears near the affected line.
+- Confirm the lualine branch still appears.
+- Confirm `Ctrl+B` still toggles the explorer.
+- Confirm `Ctrl+J` still toggles the terminal.
+- Run `git status` in the bottom terminal.

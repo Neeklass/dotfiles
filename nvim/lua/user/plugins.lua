@@ -17,6 +17,7 @@ vim.opt.rtp:prepend(lazypath)
 require("lazy").setup({
   { import = "user.plugins.explorer" },
   { import = "user.plugins.statusline" },
+  { import = "user.plugins.git" },
 }, {
   lockfile = config_root .. "/lazy-lock.json",
   change_detection = {

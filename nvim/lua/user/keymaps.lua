@@ -4,6 +4,22 @@ local function opts(desc)
   return { noremap = true, silent = true, desc = desc }
 end
 
+local function delete_selected_lines()
+  local start_line = vim.fn.line("'<")
+  local end_line = vim.fn.line("'>")
+
+  if start_line > end_line then
+    start_line, end_line = end_line, start_line
+  end
+
+  vim.api.nvim_buf_set_lines(0, start_line - 1, end_line, false, {})
+
+  local line_count = vim.api.nvim_buf_line_count(0)
+  if line_count > 0 then
+    vim.api.nvim_win_set_cursor(0, { math.min(start_line, line_count), 0 })
+  end
+end
+
 map({ "n", "i", "v", "s" }, "<C-s>", function()
   vim.cmd.write()
 end, opts("Save file"))
@@ -29,6 +45,12 @@ map("n", "<C-z>", "u", opts("Undo"))
 map({ "i", "v", "s" }, "<C-z>", "<Esc>u", opts("Undo"))
 map("n", "<C-y>", "<C-r>", opts("Redo"))
 map({ "i", "v", "s" }, "<C-y>", "<Esc><C-r>", opts("Redo"))
+
+-- VS Code-like line deletion. Ctrl+Shift chords are reliable in Neovide, but
+-- some terminal emulators may not send them distinctly.
+map("n", "<C-S-k>", '"_dd', opts("Delete current line"))
+map("i", "<C-S-k>", '<Esc>"_ddi', opts("Delete current line"))
+map({ "v", "s" }, "<C-S-k>", delete_selected_lines, opts("Delete selected lines"))
 
 map("n", "<Esc>", "<cmd>nohlsearch<CR>", opts("Clear search highlight"))
 
