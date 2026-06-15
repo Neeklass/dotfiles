@@ -585,6 +585,40 @@ already has useful defaults:
 Further explorer navigation polish belongs in Phase 11 or a later small polish
 phase.
 
+## Theme And Colors
+
+Phase 7 adds Catppuccin as a normal theme plugin, not a Neovim distribution.
+
+Active theme:
+
+```lua
+vim.cmd.colorscheme("catppuccin-mocha")
+```
+
+The active flavor is Catppuccin Mocha. Transparency is disabled.
+
+The theme config enables integrations only for plugins already used by this
+config:
+
+- nvim-tree
+- Telescope
+- gitsigns
+- lualine
+
+lualine uses the Catppuccin theme while keeping the existing statusline layout.
+
+Terminal Neovim appearance can still vary depending on terminal truecolor
+support and terminal font configuration.
+
+To switch flavor later, update the Catppuccin setup in
+`nvim/lua/user/plugins/theme.lua`, then change the colorscheme name to match,
+for example:
+
+```lua
+flavour = "latte"
+vim.cmd.colorscheme("catppuccin-latte")
+```
+
 ## Phase 5 Manual Checks
 
 - `Ctrl+P` opens the file picker in Neovide.

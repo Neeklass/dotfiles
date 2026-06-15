@@ -15,6 +15,7 @@ end
 vim.opt.rtp:prepend(lazypath)
 
 require("lazy").setup({
+  { import = "user.plugins.theme" },
   { import = "user.plugins.explorer" },
   { import = "user.plugins.statusline" },
   { import = "user.plugins.git" },
