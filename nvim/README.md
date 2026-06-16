@@ -585,6 +585,61 @@ already has useful defaults:
 Further explorer navigation polish belongs in Phase 11 or a later small polish
 phase.
 
+## Explorer Navigation
+
+nvim-tree is a tree buffer, not a VS Code-like GUI file explorer. The top/root
+label shows the current tree root, but it is not a clickable breadcrumb bar and
+cannot be clicked downward through folders. Real VS Code-like drag/drop is not
+implemented.
+
+Use nvim-tree as a sidebar/project overview. Use Telescope for fast file
+navigation, and use nvim-tree's built-in file actions for basic file management.
+
+Global mappings:
+
+```text
+Ctrl+B       toggle explorer
+<leader>eo   open/focus explorer
+<leader>ef   reveal current file in explorer
+```
+
+nvim-tree defaults:
+
+```text
+Enter / o       open file or expand folder
+double-click    open
+-               change tree root to parent
+P               move cursor to parent directory
+<C-]>           set selected folder/node as root
+double right-click
+                set selected node as root
+<BS>            close directory
+W               collapse all
+g? / ?          show nvim-tree help
+```
+
+File actions:
+
+```text
+a          create file or directory
+r          rename
+e          rename basename
+d / Delete delete
+c          copy
+x          cut
+p          paste
+y          copy name
+Y          copy relative path
+gy         copy absolute path
+```
+
+Drag/drop is not implemented. Use cut/copy/paste/rename actions instead.
+Single-click open is intentionally not enabled because it is too easy to trigger
+accidentally while focusing or selecting in the tree.
+
+If file/folder management still feels awkward, evaluate `oil.nvim` in a later
+separate phase. It is not added in the current setup.
+
 ## Theme And Colors
 
 Phase 7 adds Catppuccin as a normal theme plugin, not a Neovim distribution.
