@@ -605,7 +605,8 @@ config:
 - gitsigns
 - lualine
 
-lualine uses the Catppuccin theme while keeping the existing statusline layout.
+lualine uses the `catppuccin-mocha` theme while keeping the existing statusline
+layout.
 
 Terminal Neovim appearance can still vary depending on terminal truecolor
 support and terminal font configuration.

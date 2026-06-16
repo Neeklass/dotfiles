@@ -9,7 +9,7 @@ return {
         transparent_background = false,
         integrations = {
           gitsigns = true,
-          lualine = true,
+          lualine = {},
           nvimtree = true,
           telescope = true,
         },
