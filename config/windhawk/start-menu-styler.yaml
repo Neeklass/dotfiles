@@ -1,0 +1,43 @@
+theme: ''
+disableNewStartMenuLayout: ''
+styleConstants:
+  - Background=<WindhawkBlur BlurAmount="4" TintColor="#101216" TintOpacity="0.42" />
+  - PrimaryText=<SolidColorBrush Color="#F2F3F5" />
+  - SecondaryText=<SolidColorBrush Color="#B8BCC4" />
+  - Hover=<SolidColorBrush Color="#18FFFFFF" />
+  - CornerRadius=12
+controlStyles:
+  - target: Grid#MainMenu > Border#AcrylicBorder
+    styles:
+      - Background:=$Background
+      - BorderThickness=0
+      - CornerRadius=$CornerRadius
+  - target: Border#AcrylicOverlay
+    styles:
+      - Background=Transparent
+      - BorderThickness=0
+      - CornerRadius=$CornerRadius
+  - target: TextBlock
+    styles:
+      - Foreground:=$PrimaryText
+  - target: TextBlock#PlaceholderText
+    styles:
+      - Foreground:=$SecondaryText
+  - target: StartMenu.SearchBoxToggleButton#SearchBoxToggleButton
+    styles:
+      - Background:=$Hover
+      - BorderThickness=0
+      - CornerRadius=10
+  - target: GridViewItem
+    styles:
+      - CornerRadius=8
+themeResourceVariables:
+  - SystemControlForegroundBaseHighBrush=#F2F3F5
+  - SystemControlForegroundBaseMediumBrush=#C4C7CE
+  - SystemControlForegroundBaseLowBrush=#9499A3
+  - SystemChromeWhiteColor=#F2F3F5
+webContentStyles:
+  - target: ''
+    styles:
+      - ''
+webContentCustomJs: ''
