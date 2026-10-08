@@ -13,9 +13,6 @@ return {
       },
       signs_staged_enable = false,
       current_line_blame = false,
-      on_attach = function()
-        -- Phase 4 is visual Git display only. Git commands stay in the terminal.
-      end,
     },
   },
 }

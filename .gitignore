@@ -4,15 +4,25 @@ Desktop.ini
 ehthumbs.db
 $RECYCLE.BIN/
 
+# macOS metadata
+.DS_Store
+._*
+
 # Local editor workspace settings
 /.vscode/
 
 # Backup and temp files
 *.bak
 *.bak-*
+*.backup-*
 *.orig
 *.tmp
 *.swp
 *.swo
 *~
+
+# Local environment files
+.env
+.env.*
+!.env.example
 

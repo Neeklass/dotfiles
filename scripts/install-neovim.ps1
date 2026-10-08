@@ -4,6 +4,7 @@ Installs Neovim and activates the configuration included in this repository.
 
 .DESCRIPTION
 Installs Neovim, Git, and ripgrep through winget unless -SkipPackages is used.
+Existing packages are not upgraded. Supports -WhatIf and -Confirm.
 It then backs up an existing Neovim configuration and either creates a
 junction to the supplied configuration folder or copies that folder.
 
@@ -43,7 +44,7 @@ if ([System.Environment]::OSVersion.Platform -ne [System.PlatformID]::Win32NT) {
     throw "This installer targets Windows. See config/nvim/README.md for manual installation on other platforms."
 }
 
-$source = [System.IO.Path]::GetFullPath($ConfigSource)
+$source = $ExecutionContext.SessionState.Path.GetUnresolvedProviderPathFromPSPath($ConfigSource).TrimEnd('\')
 if (-not (Test-Path -LiteralPath $source -PathType Container)) {
     throw "Neovim configuration directory not found: $source"
 }
@@ -56,11 +57,29 @@ if (-not $env:LOCALAPPDATA) {
     throw "LOCALAPPDATA is not defined; the standard Neovim configuration path cannot be determined."
 }
 
-$destination = Join-Path $env:LOCALAPPDATA "nvim"
+$destination = [System.IO.Path]::GetFullPath((Join-Path $env:LOCALAPPDATA "nvim"))
+$comparison = [System.StringComparison]::OrdinalIgnoreCase
+if ($source -ieq $destination -or
+    $source.StartsWith($destination + '\', $comparison) -or
+    $destination.StartsWith($source + '\', $comparison)) {
+    throw "Source and destination must be separate, non-nested directories: $source and $destination"
+}
+
+# This script manages the default profile, not an XDG or NVIM_APPNAME override.
+if ($env:XDG_CONFIG_HOME -or ($env:NVIM_APPNAME -and $env:NVIM_APPNAME -ne 'nvim')) {
+    throw "A custom Neovim config path is active. Use the manual setup in config/nvim/README.md."
+}
+
+$existing = Get-Item -LiteralPath $destination -Force -ErrorAction SilentlyContinue
+$alreadyActive = $false
+if ($existing -and $InstallMode -eq "Junction" -and $existing.LinkType -eq "Junction") {
+    $target = [System.IO.Path]::GetFullPath([string]$existing.Target)
+    $alreadyActive = $target.TrimEnd('\') -ieq $source
+}
 
 if (-not $SkipPackages) {
     $winget = Get-Command winget.exe -ErrorAction SilentlyContinue
-    if (-not $winget) {
+    if (-not $winget -and -not $WhatIfPreference) {
         throw "winget is required to install packages. Install App Installer or rerun with -SkipPackages."
     }
 
@@ -74,43 +93,45 @@ if (-not $SkipPackages) {
         if ($PSCmdlet.ShouldProcess($package.Name, "Install with winget")) {
             Write-Host "Installing $($package.Name)..."
             & $winget.Source install --id $package.Id --exact --source winget `
-                --accept-package-agreements --accept-source-agreements
-            if ($LASTEXITCODE -ne 0) {
+                --accept-package-agreements --accept-source-agreements --no-upgrade
+            # WinGet reports an already-installed package as a nonzero HRESULT.
+            if ($LASTEXITCODE -notin @(0, -1978335135)) { # 0x8A150061: PACKAGE_ALREADY_INSTALLED
                 throw "winget failed to install $($package.Name) (exit code $LASTEXITCODE)."
             }
         }
     }
 }
 
-$alreadyActive = $false
-if (Test-Path -LiteralPath $destination) {
-    $existing = Get-Item -LiteralPath $destination -Force
-    if ($InstallMode -eq "Junction" -and $existing.LinkType -eq "Junction") {
-        $target = [System.IO.Path]::GetFullPath([string]$existing.Target)
-        $alreadyActive = $target.TrimEnd("\") -ieq $source.TrimEnd("\")
-    }
-}
-
 if ($alreadyActive) {
     Write-Host "Neovim configuration is already linked to: $source"
 } else {
-    if (Test-Path -LiteralPath $destination) {
-        $timestamp = Get-Date -Format "yyyyMMdd-HHmmss"
-        $backup = Join-Path (Split-Path -Parent $destination) "nvim.backup-$timestamp"
-        if ($PSCmdlet.ShouldProcess($destination, "Move existing configuration to $backup")) {
-            Move-Item -LiteralPath $destination -Destination $backup
-            Write-Host "Existing configuration backed up to: $backup"
-        }
+    $backup = "$destination.backup-$(Get-Date -Format 'yyyyMMdd-HHmmss-fffffff')"
+    $action = "Activate configuration from $source using $InstallMode"
+    if ($existing) { $action += "; back up existing configuration to $backup" }
+
+    # Confirm backup and activation together so declining cannot overwrite files.
+    if (-not $PSCmdlet.ShouldProcess($destination, $action)) {
+        if ($WhatIfPreference) { Write-Host "Dry run complete; no changes were made." }
+        else { Write-Host "Configuration activation skipped." }
+        return
     }
 
-    if ($InstallMode -eq "Junction") {
-        if ($PSCmdlet.ShouldProcess($destination, "Create junction to $source")) {
-            New-Item -ItemType Junction -Path $destination -Target $source | Out-Null
+    if ($existing) {
+        if (Test-Path -LiteralPath $backup) { throw "Backup already exists: $backup" }
+        # Rename within the same parent; a junction's target is never moved.
+        Rename-Item -LiteralPath $destination -NewName (Split-Path -Leaf $backup) -Confirm:$false
+        Write-Host "Existing configuration backed up to: $backup"
+    }
+
+    try {
+        if ($InstallMode -eq "Junction") {
+            New-Item -ItemType Junction -Path $destination -Target $source -Confirm:$false | Out-Null
+        } else {
+            Copy-Item -LiteralPath $source -Destination $destination -Recurse -Confirm:$false
         }
-    } else {
-        if ($PSCmdlet.ShouldProcess($destination, "Copy configuration from $source")) {
-            Copy-Item -LiteralPath $source -Destination $destination -Recurse
-        }
+    } catch {
+        if ($existing) { Write-Warning "Activation failed. The previous configuration is preserved at: $backup" }
+        throw
     }
 }
 

@@ -1,123 +1,121 @@
-# VS Code Dotfiles Installer for Windows
-# Installs extensions and applies VS Code user settings.
+<#
+.SYNOPSIS
+Applies a VS Code settings preset and installs the listed extensions on Windows.
 
+.DESCRIPTION
+Backs up existing settings before replacing them; settings are not merged.
+Keybindings and snippets are left alone. Supports -WhatIf and -Confirm.
+
+.PARAMETER DotfilesRoot
+Folder containing the settings presets and extensions.txt. Defaults to this folder.
+
+.PARAMETER VSCodeUser
+VS Code user directory. Defaults to %APPDATA%\Code\User.
+
+.PARAMETER SettingsVariant
+Full applies settings.json; Minimal applies settings.minimal.json.
+
+.PARAMETER SkipExtensions
+Applies only settings, without invoking the VS Code CLI.
+
+.EXAMPLE
+.\config\vscode\install.ps1 -WhatIf
+
+.EXAMPLE
+.\config\vscode\install.ps1 -SettingsVariant Minimal -SkipExtensions
+#>
+[CmdletBinding(SupportsShouldProcess)]
+param(
+    [string]$DotfilesRoot = $PSScriptRoot,
+    [string]$VSCodeUser,
+    [ValidateSet('Full', 'Minimal')]
+    [string]$SettingsVariant = 'Full',
+    [switch]$SkipExtensions
+)
+
+# Keep the function available when the script is dot-sourced.
 function Install-VSCodeDotfiles {
-    [CmdletBinding(SupportsShouldProcess = $true)]
+    [CmdletBinding(SupportsShouldProcess)]
     param(
         [string]$DotfilesRoot = $PSScriptRoot,
-        [string]$VSCodeUser = (Join-Path $env:APPDATA 'Code\User')
+        [string]$VSCodeUser,
+        [ValidateSet('Full', 'Minimal')]
+        [string]$SettingsVariant = 'Full',
+        [switch]$SkipExtensions
     )
 
-    if (-not $DotfilesRoot) {
-        $DotfilesRoot = Split-Path -Parent $MyInvocation.MyCommand.Path
+    $ErrorActionPreference = 'Stop'
+
+    if ([Environment]::OSVersion.Platform -ne [PlatformID]::Win32NT) {
+        throw 'This installer targets Windows. See config/vscode/README.md for manual setup.'
+    }
+    if (-not $VSCodeUser) {
+        if (-not $env:APPDATA) { throw 'APPDATA is not defined; pass -VSCodeUser explicitly.' }
+        $VSCodeUser = Join-Path $env:APPDATA 'Code\User'
     }
 
-    if (-not (Test-Path $DotfilesRoot)) {
-        throw "Dotfiles root not found: $DotfilesRoot"
+    $DotfilesRoot = $ExecutionContext.SessionState.Path.GetUnresolvedProviderPathFromPSPath($DotfilesRoot)
+    $VSCodeUser = $ExecutionContext.SessionState.Path.GetUnresolvedProviderPathFromPSPath($VSCodeUser)
+    $settingsName = if ($SettingsVariant -eq 'Minimal') { 'settings.minimal.json' } else { 'settings.json' }
+    $source = Join-Path $DotfilesRoot $settingsName
+    $destination = Join-Path $VSCodeUser 'settings.json'
+    $extensionsFile = Join-Path $DotfilesRoot 'extensions.txt'
+
+    if (-not (Test-Path -LiteralPath $source -PathType Leaf)) {
+        throw "Settings file not found: $source"
+    }
+    # Validate the repository's plain JSON without parsing or rewriting the user's JSONC.
+    Get-Content -LiteralPath $source -Raw | ConvertFrom-Json | Out-Null
+    if ($VSCodeUser.TrimEnd('\') -ieq $DotfilesRoot.TrimEnd('\') -or
+        $VSCodeUser.StartsWith($DotfilesRoot.TrimEnd('\') + '\', [StringComparison]::OrdinalIgnoreCase)) {
+        throw 'The VS Code user directory must be outside the source folder.'
+    }
+    $existing = Get-Item -LiteralPath $destination -Force -ErrorAction SilentlyContinue
+    if ($existing -and ($existing.PSIsContainer -or ($existing.Attributes -band [IO.FileAttributes]::ReparsePoint))) {
+        throw "Expected a regular settings file; manage this directory or link manually: $destination"
     }
 
-    $Timestamp = Get-Date -Format "yyyyMMdd-HHmmss"
-    $SettingsMinimal = Join-Path $DotfilesRoot 'settings.minimal.json'
-    $SettingsFull = Join-Path $DotfilesRoot 'settings.json'
-    $Keybindings = Join-Path $DotfilesRoot 'keybindings.json'
-    $Snippets = Join-Path $DotfilesRoot 'snippets'
-    $ExtensionsFile = Join-Path $DotfilesRoot 'extensions.txt'
+    $backup = "$destination.bak-$(Get-Date -Format 'yyyyMMdd-HHmmss-fffffff')"
+    $action = "Apply $settingsName"
+    if ($existing) { $action += " after backing up existing settings to $backup" }
 
-    Write-Host ""
-    Write-Host "============================================="
-    Write-Host " VS Code Dotfiles Installer"
-    Write-Host "============================================="
-    Write-Host ""
-
-    New-Item -ItemType Directory -Force -Path $VSCodeUser | Out-Null
-
-    $CodeCommand = Get-Command code -ErrorAction SilentlyContinue
-    if (-not $CodeCommand) {
-        Write-Warning "VS Code CLI command 'code' was not found. Extension installation will be skipped."
-    }
-
-    Write-Host "Creating backups..."
-
-    if (Test-Path (Join-Path $VSCodeUser 'settings.json')) {
-        Copy-Item (Join-Path $VSCodeUser 'settings.json') (Join-Path $VSCodeUser "settings.json.bak-$Timestamp") -Force
-        Write-Host "Backed up settings.json"
-    }
-
-    if (Test-Path (Join-Path $VSCodeUser 'keybindings.json')) {
-        Copy-Item (Join-Path $VSCodeUser 'keybindings.json') (Join-Path $VSCodeUser "keybindings.json.bak-$Timestamp") -Force
-        Write-Host "Backed up keybindings.json"
-    }
-
-    if (Test-Path (Join-Path $VSCodeUser 'snippets')) {
-        Copy-Item (Join-Path $VSCodeUser 'snippets') (Join-Path $VSCodeUser "snippets.bak-$Timestamp") -Recurse -Force
-        Write-Host "Backed up snippets"
-    }
-
-    Write-Host ""
-
-    if (Test-Path $SettingsFull) {
-        if ($PSCmdlet.ShouldProcess($VSCodeUser, "Copy settings.json")) {
-            Copy-Item $SettingsFull (Join-Path $VSCodeUser 'settings.json') -Force
-            Write-Host "Applied settings.json"
+    # Backup and replacement are one operation: declining it cannot overwrite settings.
+    if ($PSCmdlet.ShouldProcess($destination, $action)) {
+        New-Item -ItemType Directory -Path $VSCodeUser -Force -Confirm:$false | Out-Null
+        if ($existing) {
+            if (Test-Path -LiteralPath $backup) { throw "Backup already exists: $backup" }
+            Copy-Item -LiteralPath $destination -Destination $backup -Confirm:$false
+            Write-Host "Existing settings backed up to: $backup"
         }
-    } elseif (Test-Path $SettingsMinimal) {
-        if ($PSCmdlet.ShouldProcess($VSCodeUser, "Copy settings.minimal.json")) {
-            Copy-Item $SettingsMinimal (Join-Path $VSCodeUser 'settings.json') -Force
-            Write-Host "Applied settings.minimal.json"
-        }
-    } else {
-        Write-Warning "No settings file found. Skipping settings."
+        Copy-Item -LiteralPath $source -Destination $destination -Force -Confirm:$false
+        Write-Host "Applied $settingsName to: $destination"
     }
 
-    Write-Host ""
-
-    if ($CodeCommand -and (Test-Path $ExtensionsFile)) {
-        Write-Host "Installing extensions from extensions.txt..."
-        Write-Host ""
-
-        Get-Content $ExtensionsFile |
-            ForEach-Object { $_.Trim() } |
-            Where-Object { $_ -and -not $_.StartsWith("#") } |
-            ForEach-Object {
-                if ($PSCmdlet.ShouldProcess("VS Code", "Install extension $_")) {
-                    Write-Host "Installing extension: $_"
-                    code --install-extension $_ --force
+    if (-not $SkipExtensions) {
+        $codeCommand = Get-Command code -CommandType Application -ErrorAction SilentlyContinue | Select-Object -First 1
+        if (-not (Test-Path -LiteralPath $extensionsFile -PathType Leaf)) {
+            Write-Warning 'No extensions.txt found. Skipping extensions.'
+        } elseif (-not $codeCommand -and -not $WhatIfPreference) {
+            Write-Warning "VS Code CLI 'code' was not found. Add it to PATH and rerun to install extensions."
+        } else {
+            $extensions = Get-Content -LiteralPath $extensionsFile |
+                ForEach-Object { $_.Trim() } |
+                Where-Object { $_ -and -not $_.StartsWith('#') } |
+                Select-Object -Unique
+            foreach ($extension in $extensions) {
+                if ($PSCmdlet.ShouldProcess($extension, 'Install VS Code extension')) {
+                    & $codeCommand.Source --install-extension $extension
+                    if ($LASTEXITCODE -ne 0) {
+                        throw "Failed to install extension $extension (exit code $LASTEXITCODE). Settings may already have been applied."
+                    }
                 }
             }
-
-        Write-Host ""
-        Write-Host "Finished extension installation."
-    } elseif (-not (Test-Path $ExtensionsFile)) {
-        Write-Warning "No extensions.txt found. Skipping extensions."
-    }
-
-    Write-Host ""
-
-    if (Test-Path $Keybindings) {
-        if ($PSCmdlet.ShouldProcess($VSCodeUser, "Copy keybindings.json")) {
-            Copy-Item $Keybindings (Join-Path $VSCodeUser 'keybindings.json') -Force
-            Write-Host "Applied keybindings.json"
         }
     }
 
-    if (Test-Path $Snippets) {
-        if ($PSCmdlet.ShouldProcess($VSCodeUser, "Copy snippets")) {
-            Remove-Item (Join-Path $VSCodeUser 'snippets') -Recurse -Force -ErrorAction SilentlyContinue
-            Copy-Item $Snippets (Join-Path $VSCodeUser 'snippets') -Recurse -Force
-            Write-Host "Applied snippets."
-        }
-    }
-
-    Write-Host ""
-    Write-Host "============================================="
-    Write-Host " Done."
-    Write-Host "============================================="
-    Write-Host ""
-    Write-Host "VS Code user folder:"
-    Write-Host $VSCodeUser
-    Write-Host ""
+    if ($WhatIfPreference) { Write-Host 'Dry run complete; no changes were made.' }
 }
 
 if ($MyInvocation.InvocationName -ne '.') {
-    Install-VSCodeDotfiles
+    Install-VSCodeDotfiles @PSBoundParameters
 }
